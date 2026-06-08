@@ -43,9 +43,12 @@ const makeEmployee = (id: string, baseSalary: string, bonus: string) => ({
   updatedAt: new Date(),
 });
 
+const EMP_ID_1 = "550e8400-e29b-41d4-a716-446655440001";
+const EMP_ID_2 = "550e8400-e29b-41d4-a716-446655440002";
+
 const employees = [
-  makeEmployee("emp-1", "100000.00", "10000.00"),
-  makeEmployee("emp-2", "80000.00", "8000.00"),
+  makeEmployee(EMP_ID_1, "100000.00", "10000.00"),
+  makeEmployee(EMP_ID_2, "80000.00", "8000.00"),
 ];
 
 const makeRequest = (body: unknown) =>
@@ -56,7 +59,7 @@ const makeRequest = (body: unknown) =>
   });
 
 const validBody = {
-  employeeIds: ["emp-1", "emp-2"],
+  employeeIds: [EMP_ID_1, EMP_ID_2],
   adjustmentType: "PERCENTAGE",
   adjustmentValue: 10,
   reason: "Annual across-the-board raise",
