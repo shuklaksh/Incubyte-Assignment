@@ -64,6 +64,7 @@ const makeRequest = (params: Record<string, string> = {}) => {
 
 describe("GET /api/employees", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(prisma.employee.findMany).mockResolvedValue([makeEmployee()] as never);
     vi.mocked(prisma.employee.count).mockResolvedValue(1);
     vi.mocked(prisma.department.findMany).mockResolvedValue([mockDepartment] as never);
