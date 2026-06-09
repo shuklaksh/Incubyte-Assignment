@@ -122,6 +122,14 @@ async function main() {
   console.log("🌱 Starting seed...");
   const start = Date.now();
 
+  // 0. Clean up existing database tables to guarantee a fresh, correct seed
+  console.log("  🧹 Cleaning up existing database records...");
+  await prisma.salaryHistory.deleteMany();
+  await prisma.employee.deleteMany();
+  await prisma.department.deleteMany();
+  await prisma.country.deleteMany();
+  console.log("  ✓ Database cleared");
+
   // 1. Upsert departments
   console.log("  Creating departments...");
   const deptRecords = await Promise.all(
@@ -150,6 +158,24 @@ async function main() {
 
   const deptMap = Object.fromEntries(deptRecords.map((d) => [d.name, d.id]));
 
+  // Generate all 945 unique combinations of Department, Country, Level, and Employment Type
+  const combinations: {
+    dept: string;
+    country: typeof COUNTRIES[0];
+    level: typeof LEVELS[0];
+    empType: typeof EMPLOYMENT_TYPES[0];
+  }[] = [];
+
+  for (const dept of DEPARTMENTS) {
+    for (const country of COUNTRIES) {
+      for (const level of LEVELS) {
+        for (const empType of EMPLOYMENT_TYPES) {
+          combinations.push({ dept, country, level, empType });
+        }
+      }
+    }
+  }
+
   // 3. Generate 10,000 employees
   const TOTAL = 10000;
   const BATCH_SIZE = 500;
@@ -166,11 +192,25 @@ async function main() {
       const globalIndex = batch * BATCH_SIZE + i;
       const seed = globalIndex * 97 + 13; // deterministic but spread out
 
-      // Pick country based on weight
-      const country = weightedPick<typeof COUNTRIES[0]>(COUNTRIES, seed * 3);
-      const level = LEVELS[Math.floor(seededRandom(seed * 7) * LEVELS.length)];
-      const empType = weightedPick<typeof EMPLOYMENT_TYPES[0]>(EMPLOYMENT_TYPES, seed * 11);
-      const dept = DEPARTMENTS[Math.floor(seededRandom(seed * 5) * DEPARTMENTS.length)];
+      let country: typeof COUNTRIES[0];
+      let level: typeof LEVELS[0];
+      let empType: typeof EMPLOYMENT_TYPES[0];
+      let dept: string;
+
+      // Ensure the first 945 employees cover all possible attribute combinations
+      if (globalIndex < combinations.length) {
+        const comb = combinations[globalIndex];
+        country = comb.country;
+        level = comb.level;
+        empType = comb.empType;
+        dept = comb.dept;
+      } else {
+        // Pick country based on weight
+        country = weightedPick<typeof COUNTRIES[0]>(COUNTRIES, seed * 3);
+        level = LEVELS[Math.floor(seededRandom(seed * 7) * LEVELS.length)];
+        empType = weightedPick<typeof EMPLOYMENT_TYPES[0]>(EMPLOYMENT_TYPES, seed * 11);
+        dept = DEPARTMENTS[Math.floor(seededRandom(seed * 5) * DEPARTMENTS.length)];
+      }
 
       // Pick random names
       const firstIdx = Math.floor(seededRandom(seed * 17) * FIRST_NAMES.length);
@@ -218,7 +258,7 @@ async function main() {
       });
     }
 
-    // Batch upsert using createMany with skipDuplicates
+    // Batch insert using createMany
     await prisma.employee.createMany({
       data: employees,
       skipDuplicates: true,
