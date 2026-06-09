@@ -6,9 +6,13 @@
  *
  * Run with: npx prisma db seed
  */
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
-const prisma = new PrismaClient();
+// PrismaNeon accepts a PoolConfig object (not a Pool instance)
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
