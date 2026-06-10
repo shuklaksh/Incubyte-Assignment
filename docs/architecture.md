@@ -3,40 +3,54 @@
 ## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        VERCEL                           │
-│                                                         │
-│   ┌──────────────────┐       ┌──────────────────────┐  │
-│   │   Next.js App    │       │    API Routes        │  │
-│   │   (React UI)     │──────▶│  (Serverless Fns)   │  │
-│   │                  │       │                      │  │
-│   │  app/page.tsx    │       │ /api/employees       │  │
-│   │  TanStack Table  │       │ /api/employees/:id   │  │
-│   │  shadcn/ui       │       │ /api/employees/bulk  │  │
-│   │  React Query     │       │ /api/export          │  │
-│   └──────────────────┘       └──────────┬───────────┘  │
-│                                         │               │
-└─────────────────────────────────────────┼───────────────┘
-                                          │ Prisma ORM
-                                          │
-                             ┌────────────▼────────────┐
-                             │      Neon Postgres       │
-                             │      (Free Tier)         │
-                             │                          │
-                             │  employees               │
-                             │  departments             │
-                             │  countries               │
-                             │  salary_history          │
-                             └──────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                           VERCEL                               │
+│                                                                │
+│  ┌──────────────────────────────┐   ┌─────────────────────┐   │
+│  │       Next.js App (React)    │   │     API Routes      │   │
+│  │                              │──▶│  (Serverless Fns)   │   │
+│  │  Navbar (/)                  │   │                     │   │
+│  │  / → EmployeeTable           │   │ GET/POST /api/employees        │   │
+│  │  /dashboard → DashboardPage  │   │ PUT /api/employees/[id]/salary │   │
+│  │                              │   │ DELETE /api/employees/[id]     │   │
+│  │  Components:                 │   │ POST /api/employees/bulk-salary│   │
+│  │   EmployeeTable (HTML table) │   │ DELETE /api/employees/bulk-delete│  │
+│  │   AddEmployeeModal           │   │ GET /api/export/employees      │   │
+│  │   EditSalaryModal            │   │ GET /api/dashboard/stats       │   │
+│  │   BulkSalaryModal            │   └───────────┬─────────┘   │
+│  │   DeleteModal                │               │              │
+│  │   EmployeeDrawer             │               │ Prisma ORM   │
+│  │                              │               │              │
+│  │  State: React Query (fetch)  │               │              │
+│  │  Styling: Inline CSS + CSS   │               │              │
+│  │           variables          │               │              │
+│  │  Validation: Zod (client)    │               │              │
+│  └──────────────────────────────┘               │              │
+│                                                 │              │
+└─────────────────────────────────────────────────┼──────────────┘
+                                                  │
+                               ┌──────────────────▼──────────────┐
+                               │        Neon Postgres             │
+                               │        (Free Tier)               │
+                               │                                  │
+                               │  employees                       │
+                               │  departments                     │
+                               │  countries                       │
+                               │  salary_history                  │
+                               └──────────────────────────────────┘
 ```
 
 **Request Flow:**
-1. User interacts with the React UI (filters, clicks, form submissions).
-2. React Query fires a `fetch` call to an API route.
-3. The API route validates the request body/query params with **Zod**.
-4. **Prisma** executes a type-safe query against **Neon Postgres**.
-5. The result is serialized and returned as JSON (or CSV for export).
-6. React Query caches the result; the UI updates optimistically where applicable.
+1. User navigates the app via the sticky `Navbar` (Employee Table or Dashboard).
+2. React Query fires `fetch` calls to API routes (GET on load, POST/PUT/DELETE on mutations).
+3. API routes validate all inputs with **Zod** before any DB call.
+4. **Prisma** executes type-safe queries against **Neon Postgres** via the `@prisma/adapter-neon` serverless adapter.
+5. Results are returned as JSON (or `text/csv` for export).
+6. React Query invalidates the relevant query cache after mutations — the table refetches automatically.
+
+**Build Pipeline (Vercel):**
+- `npm install` → triggers `postinstall: prisma generate` (Prisma client types generated)
+- `npm run build` → `prisma generate && next build` (safety double-generate + TypeScript compile)
 
 ---
 
@@ -103,33 +117,40 @@ parameterized queries, manual result mapping).
 
 ---
 
-### shadcn/ui
+### UI Design System (Inline CSS + CSS Variables)
 
-**What it is:** A collection of copy-paste UI components built on Radix UI primitives and
-styled with Tailwind CSS. Not a library — components live in your codebase and can be edited.
+**What it is:** All UI components use **inline React `CSSProperties`** backed by a set of
+CSS custom properties (variables) defined in `app/globals.css`. No utility class strings
+in JSX — all styles are type-safe JavaScript objects.
 
-**Why we chose it:** Not version-locked to a library. Full control over component internals.
-Accessible by default (Radix handles ARIA, keyboard navigation, focus management). Works
-seamlessly with Tailwind's utility classes. The `Sonner` toast component ships with it.
+**Why we chose it:** Zero build-time CSS purging concerns. CSS variable tokens (`--primary`,
+`--surface`, `--text-primary`, etc.) define the dark-mode design system globally; components
+read from them without any class-name coupling. Easy to theme and override. The approach also
+avoided version conflicts between Tailwind and third-party component libraries.
 
-**Considered instead:** MUI (Material UI) — too opinionated in visual design, hard to
-override styles, large bundle. Ant Design — heavy bundle size, aesthetics feel dated for a
-modern internal tool.
+**Radix UI / shadcn primitives** are installed as dependencies to provide accessibility
+behaviours (ARIA attributes, keyboard navigation, focus traps) for interactive widgets.
+`Sonner` is used exclusively for toast notifications.
+
+**Considered instead:** Tailwind utility classes directly in JSX (cluttered, hard to read for
+complex layouts). Full shadcn/ui component library (would impose its own class-name design
+system and fight with the custom dark-mode variables).
 
 ---
 
-### TanStack Table v8
+### Custom HTML Table (Plain `<table>`)
 
-**What it is:** A headless (renderless) table logic library. Provides sort, filter, pagination,
-row selection, and column pinning state management with zero imposed HTML or CSS.
+**What it is:** The employee table is a standard `<table>` element with manually managed
+state for sorting, selection, and pagination — all synced to the URL via Next.js router.
 
-**Why we chose it:** Completely headless — we own the markup and styling. Works with
-server-side data: we pass our API results in and it manages UI state (which column is sorted,
-current page). Battle-tested for large datasets. Used by companies like Vercel and Linear.
+**Why we chose it:** Server-side pagination means the browser only ever has 50 rows at a
+time. TanStack Table's client-side row model adds no value when all filtering and slicing
+happens in Postgres. A plain `<table>` is simpler, easier to test, and has less JavaScript
+overhead. All sort/filter/pagination state lives in URL params — shareable and refresh-safe.
 
-**Considered instead:** Simple HTML `<table>` with custom state (no built-in sort/filter
-state management — too much manual wiring). AG Grid (overkill for this use case, paid license
-required for advanced features like row grouping).
+**Considered instead:** TanStack Table v8 (installed but not used for the main table — its
+client-side row model is designed for data already in the browser, which conflicts with the
+server-side-first design). AG Grid (paid license required for row grouping; overkill).
 
 ---
 
