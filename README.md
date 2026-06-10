@@ -108,7 +108,9 @@ A single Next.js 14 (App Router) application deployed on Vercel. The React UI co
 | `__tests__/api/bulk-salary.test.ts` | 12 |
 | `__tests__/api/delete.test.ts` | 6 |
 | `__tests__/api/export.test.ts` | 6 |
-| **Total** | **114** |
+| `__tests__/api/create.test.ts` | 5 |
+| `__tests__/api/dashboard.test.ts` | 4 |
+| **Total** | **123** |
 
 All API tests use mocked Prisma — no database required to run tests.
 
