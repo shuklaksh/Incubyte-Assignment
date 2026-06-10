@@ -7,8 +7,11 @@ import { Navbar } from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(appUrl),
   title: "Employee Salary Management — ACME",
   description:
     "Manage employee salaries across 10,000+ employees with filtering, bulk updates, and full audit history.",
