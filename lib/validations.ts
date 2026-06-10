@@ -8,13 +8,13 @@ import { z } from "zod";
  */
 export const UpdateSalarySchema = z.object({
   baseSalary: z
-    .number({ required_error: "baseSalary is required" })
+    .number({ error: (issue) => issue.input === undefined ? "baseSalary is required" : undefined })
     .positive("baseSalary must be a positive number"),
   bonus: z
-    .number({ required_error: "bonus is required" })
+    .number({ error: (issue) => issue.input === undefined ? "bonus is required" : undefined })
     .min(0, "bonus cannot be negative"),
   reason: z
-    .string({ required_error: "reason is required" })
+    .string({ error: (issue) => issue.input === undefined ? "reason is required" : undefined })
     .min(10, "reason must be at least 10 characters")
     .max(500, "reason cannot exceed 500 characters"),
 });
@@ -32,13 +32,13 @@ export const BulkSalarySchema = z.object({
     .array(z.string().uuid("each employeeId must be a valid UUID"))
     .min(1, "at least one employee must be selected"),
   adjustmentType: z.enum(["PERCENTAGE", "FIXED"], {
-    errorMap: () => ({ message: "adjustmentType must be PERCENTAGE or FIXED" }),
+    error: "adjustmentType must be PERCENTAGE or FIXED",
   }),
   adjustmentValue: z
-    .number({ required_error: "adjustmentValue is required" })
+    .number({ error: (issue) => issue.input === undefined ? "adjustmentValue is required" : undefined })
     .positive("adjustmentValue must be a positive number"),
   reason: z
-    .string({ required_error: "reason is required" })
+    .string({ error: (issue) => issue.input === undefined ? "reason is required" : undefined })
     .min(10, "reason must be at least 10 characters")
     .max(500, "reason cannot exceed 500 characters"),
 });

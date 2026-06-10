@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useCallback, useRef, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Search, Download, RefreshCw, ChevronUp, ChevronDown,
   Pencil, Trash2, ChevronLeft, ChevronRight, X, AlertCircle
 } from "lucide-react";
-import { toast } from "sonner";
 import type { Employee, EmployeeListResponse, EmployeeFilters } from "@/lib/types";
 import { COUNTRY_FLAGS } from "@/lib/types";
-import { formatCurrency, formatDate, formatEmploymentType, calcTotalComp, calcDelta } from "@/lib/format";
+import { formatCurrency, formatDate, calcTotalComp } from "@/lib/format";
 import { EditSalaryModal } from "./EditSalaryModal";
 import { BulkSalaryModal } from "./BulkSalaryModal";
 import { DeleteModal } from "./DeleteModal";
@@ -43,7 +42,7 @@ export function EmployeeTable() {
   const queryClient = useQueryClient();
 
   // Read filters from URL
-  const filters: EmployeeFilters = {
+  const filters: EmployeeFilters = useMemo(() => ({
     page: Number(searchParams.get("page") ?? 1),
     limit: 50,
     search: searchParams.get("search") ?? undefined,
@@ -53,7 +52,7 @@ export function EmployeeTable() {
     level: searchParams.get("level") ?? undefined,
     sortBy: searchParams.get("sortBy") ?? undefined,
     sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") ?? "asc",
-  };
+  }), [searchParams]);
 
   const updateFilters = useCallback((updates: Partial<EmployeeFilters>) => {
     const next = { ...filters, ...updates };
@@ -143,19 +142,6 @@ export function EmployeeTable() {
   const handleExport = () => {
     window.location.href = `/api/export/employees?${buildParams(filters)}`;
   };
-
-  // Bulk delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      await Promise.all(ids.map(id => fetch(`/api/employees/${id}`, { method: "DELETE" })));
-    },
-    onSuccess: () => {
-      toast.success("Employees removed successfully");
-      clearSelection();
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-    },
-    onError: () => toast.error("Failed to delete employees"),
-  });
 
   // Pagination pages
   const renderPages = () => {
