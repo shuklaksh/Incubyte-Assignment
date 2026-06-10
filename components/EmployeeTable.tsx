@@ -191,7 +191,7 @@ export function EmployeeTable() {
     thNoSort: { padding: "10px 12px", textAlign: "left" as const, fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase" as const, letterSpacing: "0.05em", borderBottom: "1px solid var(--border)" },
     td: { padding: "10px 12px", fontSize: 14, borderBottom: "1px solid var(--border-subtle)", color: "var(--text-primary)", verticalAlign: "middle" as const },
     row: { cursor: "pointer", transition: "background 0.1s" },
-    badge: { display: "inline-block", padding: "2px 8px", borderRadius: 99, fontSize: 12, fontWeight: 500 },
+    badge: { display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "2px 8px", borderRadius: 99, fontSize: 12, fontWeight: 500, textAlign: "center" as const },
     pagination: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16 },
     pageInfo: { fontSize: 14, color: "var(--text-secondary)" },
     pageBtn: { padding: "6px 10px", background: "var(--surface-raised)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text-primary)", fontSize: 13, cursor: "pointer", minWidth: 32, textAlign: "center" as const },
