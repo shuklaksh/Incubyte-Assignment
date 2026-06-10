@@ -184,7 +184,7 @@ export function EmployeeTable() {
     pageInfo: { fontSize: 14, color: "var(--text-secondary)" },
     pageBtn: { padding: "6px 10px", background: "var(--surface-raised)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text-primary)", fontSize: 13, cursor: "pointer", minWidth: 32, textAlign: "center" as const },
     pageBtnActive: { background: "var(--primary)", border: "1px solid var(--primary)", color: "#fff" },
-    surface: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" },
+    surface: { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, overflow: "auto" },
     errorBanner: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "var(--destructive-muted)", border: "1px solid var(--destructive)", borderRadius: 8, marginBottom: 12, color: "var(--destructive)" },
     emptyState: { textAlign: "center" as const, padding: "60px 20px", color: "var(--text-secondary)" },
     selectAllBanner: { display: "flex", alignItems: "center", gap: 12, padding: "8px 16px", background: "var(--surface-raised)", borderBottom: "1px solid var(--border)", fontSize: 13 },
