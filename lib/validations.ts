@@ -81,3 +81,13 @@ export const EmployeeQuerySchema = z.object({
 });
 
 export type EmployeeQueryInput = z.infer<typeof EmployeeQuerySchema>;
+
+// ─── DashboardQuerySchema ──────────────────────────────────────────────────────
+export const DashboardQuerySchema = z.object({
+  country: z.string().optional(),
+  department: z.string().optional(),
+  level: z.enum(["L1", "L2", "L3", "L4", "L5", "L6", "L7"]).optional(),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]).optional(),
+});
+
+export type DashboardQueryInput = z.infer<typeof DashboardQuerySchema>;
