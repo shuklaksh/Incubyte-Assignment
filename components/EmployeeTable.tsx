@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Search, Download, RefreshCw, ChevronUp, ChevronDown,
-  Pencil, Trash2, ChevronLeft, ChevronRight, X, AlertCircle
+  Pencil, Trash2, ChevronLeft, ChevronRight, X, AlertCircle, Plus
 } from "lucide-react";
 import type { Employee, EmployeeListResponse, EmployeeFilters } from "@/lib/types";
 import { COUNTRY_FLAGS } from "@/lib/types";
@@ -14,6 +14,7 @@ import { EditSalaryModal } from "./EditSalaryModal";
 import { BulkSalaryModal } from "./BulkSalaryModal";
 import { DeleteModal } from "./DeleteModal";
 import { EmployeeDrawer } from "./EmployeeDrawer";
+import { AddEmployeeModal } from "./AddEmployeeModal";
 
 const EMPLOYMENT_TYPE_BADGE: Record<string, { label: string; style: React.CSSProperties }> = {
   FULL_TIME: { label: "Full Time", style: { background: "var(--badge-blue)", color: "var(--badge-blue-text)" } },
@@ -82,6 +83,7 @@ export function EmployeeTable() {
   const [selectAll, setSelectAll] = useState(false);
 
   // Modal state
+  const [addOpen, setAddOpen] = useState(false);
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Employee | string[] | null>(null);
@@ -193,9 +195,14 @@ export function EmployeeTable() {
       {/* Header */}
       <div style={s.header}>
         <h1 style={s.h1}>Employee Salaries</h1>
-        <button style={{ ...s.btn, ...s.btnPrimary }} onClick={handleExport} id="export-csv-btn">
-          <Download size={16} /> Export CSV
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button style={{ ...s.btn, ...s.btnPrimary }} onClick={() => setAddOpen(true)} id="add-employee-btn">
+            <Plus size={16} /> Add Employee
+          </button>
+          <button style={{ ...s.btn }} onClick={handleExport} id="export-csv-btn">
+            <Download size={16} /> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -445,6 +452,17 @@ export function EmployeeTable() {
           onSuccess={() => {
             setDeleteTarget(null);
             clearSelection();
+            queryClient.invalidateQueries({ queryKey: ["employees"] });
+          }}
+        />
+      )}
+      {addOpen && (
+        <AddEmployeeModal
+          departments={departments}
+          countries={countries}
+          onClose={() => setAddOpen(false)}
+          onSuccess={() => {
+            setAddOpen(false);
             queryClient.invalidateQueries({ queryKey: ["employees"] });
           }}
         />

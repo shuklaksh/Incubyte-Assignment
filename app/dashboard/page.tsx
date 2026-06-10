@@ -33,15 +33,26 @@ interface DepartmentBudgetInfo {
   budget: number;
 }
 
+interface JobTitleStatsInfo {
+  jobTitle: string;
+  count: number;
+  avgSalary: number;
+  minSalary: number;
+  maxSalary: number;
+}
+
 interface DashboardStatsResponse {
   stats: {
     totalPayroll: number;
     activeEmployees: number;
     avgBaseSalary: number;
+    minBaseSalary: number;
+    maxBaseSalary: number;
   };
   countries: CountryInfo[];
   levels: LevelInfo[];
   departments: DepartmentBudgetInfo[];
+  jobTitles: JobTitleStatsInfo[];
 }
 
 const LEVEL_LIST = ["L1", "L2", "L3", "L4", "L5", "L6", "L7"];
@@ -383,6 +394,36 @@ function DashboardContent() {
             </div>
           )}
         </div>
+
+        {/* Card 4: Min Base Salary */}
+        <div style={s.card}>
+          <div style={s.cardHeader}>
+            <span>Min. Base Salary</span>
+            <Briefcase size={18} style={{ color: "var(--primary)" }} />
+          </div>
+          {isLoading ? (
+            <div className="skeleton" style={{ height: 34, width: 140, marginTop: 4 }} />
+          ) : (
+            <div style={s.cardValue}>
+              {formatCurrency(stats?.minBaseSalary ?? 0, currency)}
+            </div>
+          )}
+        </div>
+
+        {/* Card 5: Max Base Salary */}
+        <div style={s.card}>
+          <div style={s.cardHeader}>
+            <span>Max. Base Salary</span>
+            <Briefcase size={18} style={{ color: "var(--primary)" }} />
+          </div>
+          {isLoading ? (
+            <div className="skeleton" style={{ height: 34, width: 140, marginTop: 4 }} />
+          ) : (
+            <div style={s.cardValue}>
+              {formatCurrency(stats?.maxBaseSalary ?? 0, currency)}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Charts & Interactive Trackers */}
@@ -482,6 +523,35 @@ function DashboardContent() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* Job Title Insights */}
+        <div style={s.chartCard}>
+          <div style={s.chartTitle}>Job Title Insights</div>
+          
+          {isLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: 44, width: "100%" }} />
+              ))}
+            </div>
+          ) : (
+            <div style={{ ...s.deptList, maxHeight: 380, overflowY: "auto", paddingRight: 8 }}>
+              {data?.jobTitles?.map((jt) => (
+                <div key={jt.jobTitle} style={s.deptRow}>
+                  <div style={s.deptHeader}>
+                    <span style={s.deptName}>{jt.jobTitle}</span>
+                    <span style={s.deptMeta}>
+                      Avg: {formatCurrency(jt.avgSalary, currency)} ({jt.count} employee{jt.count !== 1 ? "s" : ""})
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                    Min: {formatCurrency(jt.minSalary, currency)} • Max: {formatCurrency(jt.maxSalary, currency)}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

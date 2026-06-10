@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Execute database aggregation, level distribution, department budgets, and query lists in parallel
-  const [stats, levelGroups, departmentGroups, activeDepartments, countries] = await Promise.all([
+  const [stats, levelGroups, departmentGroups, activeDepartments, countries, jobTitleGroups] = await Promise.all([
     prisma.employee.aggregate({
       where,
       _sum: {
@@ -56,6 +56,12 @@ export async function GET(request: NextRequest) {
         bonus: true,
       },
       _avg: {
+        baseSalary: true,
+      },
+      _min: {
+        baseSalary: true,
+      },
+      _max: {
         baseSalary: true,
       },
       _count: {
@@ -102,6 +108,25 @@ export async function GET(request: NextRequest) {
         name: "asc",
       },
     }),
+    prisma.employee.groupBy({
+      by: ["jobTitle"],
+      where,
+      _count: {
+        _all: true,
+      },
+      _avg: {
+        baseSalary: true,
+      },
+      _min: {
+        baseSalary: true,
+      },
+      _max: {
+        baseSalary: true,
+      },
+      orderBy: {
+        jobTitle: "asc",
+      },
+    }),
   ]);
 
   const totalPayroll =
@@ -110,6 +135,8 @@ export async function GET(request: NextRequest) {
 
   const activeEmployees = stats._count._all ?? 0;
   const avgBaseSalary = stats._avg.baseSalary ? Number(stats._avg.baseSalary) : 0;
+  const minBaseSalary = stats._min?.baseSalary ? Number(stats._min.baseSalary) : 0;
+  const maxBaseSalary = stats._max?.baseSalary ? Number(stats._max.baseSalary) : 0;
 
   const levels = levelGroups.map((g) => ({
     level: g.level,
@@ -132,14 +159,25 @@ export async function GET(request: NextRequest) {
     };
   });
 
+  const jobTitles = jobTitleGroups.map((g) => ({
+    jobTitle: g.jobTitle,
+    count: g._count?._all ?? 0,
+    avgSalary: g._avg?.baseSalary ? Number(g._avg.baseSalary) : 0,
+    minSalary: g._min?.baseSalary ? Number(g._min.baseSalary) : 0,
+    maxSalary: g._max?.baseSalary ? Number(g._max.baseSalary) : 0,
+  }));
+
   return NextResponse.json({
     stats: {
       totalPayroll,
       activeEmployees,
       avgBaseSalary,
+      minBaseSalary,
+      maxBaseSalary,
     },
     countries,
     levels,
     departments,
+    jobTitles,
   });
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { EmployeeQuerySchema } from "@/lib/validations";
+import { EmployeeQuerySchema, CreateEmployeeSchema } from "@/lib/validations";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -116,4 +116,111 @@ export async function GET(request: NextRequest) {
       countries,
     },
   });
+}
+
+/**
+ * POST /api/employees
+ * Creates a new active employee.
+ * Validates request body with Zod and checks database constraints.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const parsed = CreateEmployeeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const {
+      fullName,
+      email,
+      jobTitle,
+      level,
+      employmentType,
+      departmentId,
+      countryCode,
+      baseSalary,
+      bonus,
+    } = parsed.data;
+
+    // Check if email already exists
+    const existing = await prisma.employee.findUnique({
+      where: { email },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: "An employee with this email already exists" },
+        { status: 409 }
+      );
+    }
+
+    // Check if department exists
+    const department = await prisma.department.findUnique({
+      where: { id: departmentId },
+    });
+    if (!department) {
+      return NextResponse.json(
+        { error: "Department not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check if country exists
+    const country = await prisma.country.findUnique({
+      where: { code: countryCode },
+    });
+    if (!country) {
+      return NextResponse.json(
+        { error: "Country not found" },
+        { status: 404 }
+      );
+    }
+
+    // Find next sequential employee code
+    const lastEmployee = await prisma.employee.findFirst({
+      orderBy: { employeeCode: "desc" },
+    });
+    let nextNum = 1;
+    if (lastEmployee) {
+      const match = lastEmployee.employeeCode.match(/EMP-(\d+)/);
+      if (match) {
+        nextNum = parseInt(match[1]) + 1;
+      }
+    }
+    const employeeCode = `EMP-${String(nextNum).padStart(5, "0")}`;
+
+    // Create employee
+    const employee = await prisma.employee.create({
+      data: {
+        employeeCode,
+        fullName,
+        email,
+        jobTitle,
+        level,
+        employmentType,
+        departmentId,
+        countryCode,
+        baseSalary: new Prisma.Decimal(baseSalary),
+        bonus: new Prisma.Decimal(bonus),
+        currency: country.currency,
+        hiredAt: new Date(),
+        isActive: true,
+      },
+      include: {
+        department: true,
+        country: true,
+      },
+    });
+
+    return NextResponse.json(employee, { status: 201 });
+  } catch (error) {
+    console.error("Error creating employee:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }

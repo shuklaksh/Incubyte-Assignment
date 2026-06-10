@@ -91,3 +91,36 @@ export const DashboardQuerySchema = z.object({
 });
 
 export type DashboardQueryInput = z.infer<typeof DashboardQuerySchema>;
+
+// ─── CreateEmployeeSchema ─────────────────────────────────────────────────────
+export const CreateEmployeeSchema = z.object({
+  fullName: z
+    .string({ error: (issue) => issue.input === undefined ? "fullName is required" : undefined })
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string({ error: (issue) => issue.input === undefined ? "email is required" : undefined })
+    .email("Invalid email address"),
+  jobTitle: z
+    .string({ error: (issue) => issue.input === undefined ? "jobTitle is required" : undefined })
+    .min(2, "Job title must be at least 2 characters"),
+  level: z.enum(["L1", "L2", "L3", "L4", "L5", "L6", "L7"], {
+    error: "level must be L1 to L7",
+  }),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"], {
+    error: "employmentType must be FULL_TIME, PART_TIME, or CONTRACT",
+  }),
+  departmentId: z
+    .string({ error: (issue) => issue.input === undefined ? "departmentId is required" : undefined })
+    .uuid("departmentId must be a valid UUID"),
+  countryCode: z
+    .string({ error: (issue) => issue.input === undefined ? "countryCode is required" : undefined })
+    .length(2, "countryCode must be a 2-letter ISO code"),
+  baseSalary: z
+    .number({ error: (issue) => issue.input === undefined ? "baseSalary is required" : undefined })
+    .positive("baseSalary must be a positive number"),
+  bonus: z
+    .number({ error: (issue) => issue.input === undefined ? "bonus is required" : undefined })
+    .min(0, "bonus cannot be negative"),
+});
+
+export type CreateEmployeeInput = z.infer<typeof CreateEmployeeSchema>;

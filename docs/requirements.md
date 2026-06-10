@@ -85,6 +85,14 @@ Every filter (search, department, country, level, type, salary range), sort colu
 sort direction, and current page number are reflected in the URL query string. Refreshing
 the browser or sharing the URL restores the exact view.
 
+### 14. Dashboard and Analytics (Base Stats & Insights)
+A comprehensive analytics dashboard including:
+- KPI cards summarizing Total Payroll, Active Employee count, Average Base Salary, Minimum Base Salary, and Maximum Base Salary.
+- Dynamic Country Filter to scope statistics.
+- Interactive Level Distribution & Equity Tracker showing count, averages, and min/max ranges for each career level (L1–L7).
+- Department Budget Utilization tracking percentage of overall payroll.
+- Job Title Insights table showing employee counts, average base salaries, and min/max boundaries.
+
 ---
 
 ## Deliberately Out of Scope
@@ -117,11 +125,6 @@ architecture and implies multiple concurrent users. The immutable audit log in
 **Why cut:** There is exactly one user persona: the HR Manager. RBAC adds schema
 complexity (roles, permissions, junction tables), middleware checks on every route,
 and UI conditional rendering — with no current benefit. Can be layered on later.
-
-### Dashboard and Analytics
-**Why cut:** Deliberately deferred to keep scope tight. The table with filters already
-lets the HR Manager answer most operational questions about pay distribution. Charts,
-histograms, and aggregate analytics are a Phase 2 feature with a dedicated design pass.
 
 ### Email Notifications
 **Why cut:** Requires an email service integration (SendGrid, Resend, etc.), HTML email
