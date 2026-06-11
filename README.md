@@ -73,28 +73,6 @@ npx prisma migrate dev # Create and apply a migration
 ## Architecture
 
 A single Next.js 14 (App Router) application deployed on Vercel. The React UI communicates with API Route handlers (serverless functions) that use Prisma ORM to query a Neon Postgres database. All inputs are validated with Zod before any DB call. Server-side pagination keeps response sizes small even with 10,000+ employees. See [docs/architecture.md](./docs/architecture.md) for the full system diagram and tech stack decisions.
-
----
-
-## Deploy to Vercel
-
-1. Push this repository to GitHub
-2. Go to [vercel.com](https://vercel.com) → **New Project** → Import from GitHub
-3. Select your repository
-4. In **Environment Variables**, add:
-   - `DATABASE_URL` — your Neon pooled connection string
-   - `DIRECT_URL` — your Neon direct connection string
-5. Click **Deploy**
-6. Once deployed, run the seed via Vercel CLI:
-   ```bash
-   npm i -g vercel
-   vercel env pull .env.production.local
-   npx prisma db seed
-   ```
-7. Visit your deployment URL — it's live!
-
-> **Note:** Vercel free tier serverless functions have a 10s timeout. The seed script must be run locally or via a build hook, not inside a serverless function.
-
 ---
 
 ## Test Coverage
